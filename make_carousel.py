@@ -171,31 +171,38 @@ def canvas():
 # ─────────── СЛАЙДИ ───────────
 def s_cover(s, base, i, n):
     img = cover_crop(base / s["photo"], W, H, s.get("focus", 0.5)).convert("RGBA")
-    side = s.get("side", "right")
-    col_w = 470
-    x0 = W - col_w - 50 if side == "right" else 50
+    side = s.get("side", "top")
+    if side == "top":
+        x0, col_w, ty0, ty1 = M - 40, W - 2 * M + 80, 170, 560
+    else:
+        col_w = 470
+        x0 = W - col_w - 50 if side == "right" else 50
+        ty0, ty1 = 200, 720
     # світла підкладка під заголовком для читабельності
     wash = Image.new("L", (W, H), 0)
-    ImageDraw.Draw(wash).rounded_rectangle([x0 - 30, 140, x0 + col_w + 30, 720], 60, fill=150)
+    ImageDraw.Draw(wash).rounded_rectangle([x0 - 30, ty0 - 60, x0 + col_w + 30, ty1], 60, fill=s.get("wash", 150))
     wash = wash.filter(ImageFilter.GaussianBlur(70))
     img = Image.composite(Image.new("RGBA", (W, H), BRAND["bg"] + (255,)), img, wash)
     ov = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(ov)
-    put(d, (70, 110), BRAND["handle"], font(BRAND["body"], 28, 500), BRAND["ink"], tracking=2)
+    put(d, (70, 70), BRAND["handle"], font(BRAND["body"], 28, 500), BRAND["ink"], tracking=2)
     waves(d, W - 190, 75)
     waves(d, 0, H - 230)
     title = s["title"].upper()
-    f, lines, sz = fit(d, title, BRAND["head"], col_w, 520, 64, 38, 700, 1.25, tracking=1)
+    f, lines, sz = fit(d, title, BRAND["head"], col_w, ty1 - ty0 - 40, 72 if side == "top" else 64, 38, 700, 1.22, tracking=1)
     cx = x0 + col_w / 2
-    block(d, cx, 200, lines, f, sz, BRAND["title"], 1.25, "c", tracking=1)
+    block(d, cx, ty0, lines, f, sz, BRAND["title"], 1.22, "c", tracking=1)
     if s.get("subtitle"):
         fs, sl, ss = fit(d, s["subtitle"], BRAND["italic"], 470, 170, 44, 30, 500, 1.3)
-        ex, ey = (W / 2 if side == "right" else W - 330), 930
+        if side == "top":
+            ex, ey = W / 2, s.get("subtitle_y", 1010)
+        else:
+            ex, ey = (W / 2 if side == "right" else W - 330), 930
         h = len(sl) * ss * 1.3
-        d.ellipse([ex - 340, ey - h / 2 - 70, ex + 340, ey + h / 2 + 70], fill=(70, 35, 20, 95))
+        d.ellipse([ex - 340, ey - h / 2 - 70, ex + 340, ey + h / 2 + 70], fill=(70, 35, 20, 110))
         oval(d, [ex - 340, ey - h / 2 - 70, ex + 340, ey + h / 2 + 70], 11)
         block(d, ex, ey - h / 2, sl, fs, ss, (255, 255, 255), 1.3, "c")
-        arrow_button(d, ex, ey + h / 2 + 150, "ЧИТАТИ", text_col=BRAND["title"])
+        arrow_button(d, ex, min(ey + h / 2 + 150, H - 120), "ЧИТАТИ", text_col=(255, 255, 255))
     return Image.alpha_composite(img, ov).convert("RGB")
 
 
