@@ -330,7 +330,7 @@ def s_final(s, base, i, n):
         fc, cl, cs = fit(d, cta, BRAND["body"], W - 2 * M, 130, 40, 30, 500, 1.3)
         y = block(d, W / 2, y, cl, fc, cs, BRAND["ink"], 1.3, "c") + 15
         fk = font(BRAND["head"], 64, 700)
-        kw = s["keyword"].upper()
+        kw = s["keyword"] if s.get("keep_case") else s["keyword"].upper()
         kwid = tw(d, kw, fk, 4)
         d.rounded_rectangle([W / 2 - kwid / 2 - 45, y - 10, W / 2 + kwid / 2 + 45, y + 95], 50, fill=BRAND["orange"])
         put(d, (W / 2, y + 2), kw, fk, (255, 255, 255), 4, "c")
@@ -347,7 +347,26 @@ def s_final(s, base, i, n):
     return img
 
 
-RENDER = {"cover": s_cover, "hook": s_hook, "content": s_content, "text": s_text,
+def s_still(s, base, i, n):
+    """Кадр (фото на весь слайд) з підписом унизу."""
+    img = cover_crop(base / s["photo"], W, H, s.get("focus", 0.5))
+    g = Image.new("L", (1, H))
+    for y in range(H):
+        p = max(0, (y / H - 0.62) / 0.38)
+        g.putpixel((0, y), int(215 * p))
+    g = g.resize((W, H))
+    img = Image.composite(Image.new("RGB", (W, H), (30, 20, 15)), img, g)
+    d = ImageDraw.Draw(img)
+    y = H - 300
+    if s.get("caption"):
+        f, lines, sz = fit(d, s["caption"], BRAND["italic"], W - 2 * M, 150, 46, 30, 500, 1.3)
+        y = block(d, M, y, lines, f, sz, (255, 255, 255), 1.3)
+    if i < n:
+        arrow_button(d, W - M - 40, H - 150, col=(255, 255, 255), text_col=(255, 255, 255))
+    return img
+
+
+RENDER = {"still": s_still, "cover": s_cover, "hook": s_hook, "content": s_content, "text": s_text,
           "list": s_list, "quote": s_quote, "final": s_final}
 
 
