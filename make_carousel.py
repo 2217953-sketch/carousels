@@ -98,7 +98,7 @@ def clean(t):
 def _arrow_font(f):
     for p in (os.path.join(FONTS, "Montserrat.ttf"), "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"):
         if os.path.exists(p):
-            return ImageFont.truetype(p, f.size)
+            return font(p, int(f.size * 1.1), 700)
     return f
 
 
