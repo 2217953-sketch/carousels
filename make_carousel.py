@@ -469,7 +469,178 @@ def s_m_final(s, base, i, n):
     return img
 
 
-RENDER = {"m_cover": s_m_cover, "m_point": s_m_point, "m_final": s_m_final, "still": s_still, "cover": s_cover, "hook": s_hook, "content": s_content, "text": s_text,
+# ─────────── КІНО-СТИЛЬ (субота, шаблон Лариси) ───────────
+FILM = {
+    "bg": (243, 241, 239), "ink": (55, 50, 48), "orange": (242, 152, 72),
+    "sans": _pick("Montserrat.ttf"), "sans_bi": _pick("Montserrat-Italic.ttf", "Montserrat.ttf"),
+}
+
+
+def rich_layout(d, text, size, max_w):
+    """Текст з **жирним курсивом**. Повертає рядки: [(слово, bold), ...]."""
+    fr = font(FILM["sans"], size, 400)
+    fb = font(FILM["sans_bi"], size, 700)
+    lines = []
+    for para in text.split("\n"):
+        if not para.strip():
+            lines.append([])
+            continue
+        words, bold = [], False
+        for k, part in enumerate(para.split("**")):
+            bold = k % 2 == 1
+            for w in part.split():
+                if words and w[0] in ".,;:!?…»)" and part.startswith(w):
+                    pw, pb = words.pop()
+                    words.append((pw, pb, w, bold))
+                else:
+                    words.append((w, bold))
+        cur, cur_w = [], 0
+        for item in words:
+            w, b = item[0], item[1]
+            ww = d.textlength(w, font=fb if b else fr)
+            if len(item) == 4:
+                ww += d.textlength(item[2], font=fb if item[3] else fr)
+            sp = d.textlength(" ", font=fr) if cur else 0
+            if cur and cur_w + sp + ww > max_w:
+                lines.append(cur)
+                cur, cur_w = [], 0
+                sp = 0
+            cur.append(item)
+            cur_w += sp + ww
+        lines.append(cur)
+    return lines, fr, fb
+
+
+def rich_draw(d, text, cx, cy, max_w, max_h, start=44, minimum=28, lh=1.42, fill=None):
+    fill = fill or FILM["ink"]
+    size = start
+    while True:
+        lines, fr, fb = rich_layout(d, text, size, max_w)
+        h = len(lines) * size * lh
+        if h <= max_h or size <= minimum:
+            break
+        size -= 2
+    y = cy - h / 2
+    for ln in lines:
+        def wid(it):
+            v = d.textlength(it[0], font=fb if it[1] else fr)
+            if len(it) == 4:
+                v += d.textlength(it[2], font=fb if it[3] else fr)
+            return v
+        widths = [wid(it) for it in ln]
+        sp = d.textlength(" ", font=fr)
+        total = sum(widths) + sp * max(len(ln) - 1, 0)
+        x = cx - total / 2
+        for it, ww in zip(ln, widths):
+            f1 = fb if it[1] else fr
+            d.text((x, y), it[0], font=f1, fill=fill)
+            if len(it) == 4:
+                d.text((x + d.textlength(it[0], font=f1), y), it[2], font=fb if it[3] else fr, fill=fill)
+            x += ww + sp
+        y += size * lh
+    return y
+
+
+def film_strip(size=170, angle=28):
+    im = Image.new("RGBA", (size * 2, size), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    col, fill = (110, 85, 70, 255), (236, 225, 212, 255)
+    w, h = size * 2 - 20, int(size * 0.55)
+    y0 = (size - h) // 2
+    d.rounded_rectangle([10, y0, 10 + w, y0 + h], 10, fill=fill, outline=col, width=4)
+    for x in range(22, w, 26):
+        d.rectangle([x, y0 + 8, x + 12, y0 + 18], fill=col)
+        d.rectangle([x, y0 + h - 18, x + 12, y0 + h - 8], fill=col)
+    for x in range(10 + 18, w, 78):
+        d.rectangle([x, y0 + 26, x + 60, y0 + h - 26], outline=col, width=3)
+    return im.rotate(angle, expand=True, resample=Image.BICUBIC)
+
+
+def ticket(text_big, text_small, color, w=380, h=170, angle=-8):
+    im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    dark = tuple(max(0, c - 60) for c in color) + (255,)
+    d.rounded_rectangle([0, 0, w - 1, h - 1], 18, fill=color + (255,))
+    r = 24
+    d.ellipse([-r, h / 2 - r, r, h / 2 + r], fill=(0, 0, 0, 0))
+    d.ellipse([w - r, h / 2 - r, w + r, h / 2 + r], fill=(0, 0, 0, 0))
+    d.rounded_rectangle([12, 12, w - 13, h - 13], 12, outline=dark, width=4)
+    for y in range(22, h - 22, 16):
+        d.line([(w - 90, y), (w - 90, y + 8)], fill=dark, width=4)
+    put(d, ((w - 90) / 2 + 6, h * 0.16), text_small, font(FILM["sans"], int(h * 0.15), 800), dark, 3, "c")
+    put(d, ((w - 90) / 2 + 6, h * 0.34), text_big, font(FILM["sans"], int(h * 0.42), 900), dark, 2, "c")
+    d.ellipse([w - 68, h / 2 - 22, w - 24, h / 2 + 22], outline=dark, width=4)
+    return im.rotate(angle, expand=True, resample=Image.BICUBIC)
+
+
+def clapper(size=56):
+    im = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rectangle([2, size * 0.38, size - 3, size - 3], fill=(40, 40, 40, 255))
+    d.polygon([(2, size * 0.32), (size - 6, size * 0.08), (size - 3, size * 0.26), (5, size * 0.48)], fill=(40, 40, 40, 255))
+    for k in range(4):
+        x = 10 + k * size * 0.22
+        d.line([(x, size * 0.29 - k * 3), (x + 8, size * 0.42 - k * 3)], fill=(240, 240, 240, 255), width=4)
+    for k in range(4):
+        x = 6 + k * size * 0.24
+        d.line([(x, size * 0.62), (x + 9, size * 0.48)], fill=(240, 240, 240, 255), width=4)
+    return im
+
+
+def film_frame(img, i, n):
+    d = ImageDraw.Draw(img)
+    fs = font(FILM["sans"], 26, 500)
+    put(d, (W / 2, H - 92), BRAND["handle"], fs, (140, 130, 125), anchor="c")
+    if i < n:
+        put(d, (W - 80, H - 92), "далі →", fs, (140, 130, 125), anchor="r")
+    return d
+
+
+def s_f_cover(s, base, i, n):
+    img = cover_crop(base / s["photo"], W, H, s.get("focus", 0.5)).convert("RGBA")
+    ov = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(ov)
+    # плашка «Фільм на вихідні» з хлопавкою
+    fh = font(FILM["sans"], 64, 800)
+    label = s.get("label", "Фільм на вихідні")
+    lw = tw(d, label, fh)
+    x0 = (W - lw - 110) / 2
+    d.rounded_rectangle([x0 - 40, 80, x0 + lw + 120, 210], 40, fill=(255, 255, 255, 205))
+    put(d, (x0, 104), label, fh, (25, 25, 25))
+    ov.alpha_composite(clapper(66), (int(x0 + lw + 30), 112))
+    # квитки
+    t1 = ticket("КІНО", "ВХІДНИЙ", (250, 190, 50), w=330, h=150, angle=-10)
+    t2 = ticket("КІНО", "ВХІДНИЙ", (240, 110, 60), w=330, h=150, angle=-4)
+    ov.alpha_composite(t1, (W - t1.size[0] - 40, 235))
+    ov.alpha_composite(t2, (W - t2.size[0] - 10, 420))
+    # нижня непрозора плашка з назвою
+    bx0, bx1 = 70, W - 70
+    title = s["title"]
+    sub = s.get("subtitle", "")
+    ft = font(FILM["sans_bi"], 54, 800)
+    fsub, sl, ss = fit(d, sub, FILM["sans"], bx1 - bx0 - 90, 130, 38, 28, 500, 1.3)
+    tl = wrap(d, title, ft, bx1 - bx0 - 90)
+    th = len(tl) * 54 * 1.2 + (len(sl) * ss * 1.3 + 18 if sub else 0)
+    by1 = H - 70
+    by0 = by1 - th - 80
+    d.rounded_rectangle([bx0, by0, bx1, by1], 34, fill=FILM["orange"] + (245,))
+    y = block(d, W / 2, by0 + 40, tl, ft, 54, (30, 22, 18), 1.2, "c")
+    if sub:
+        block(d, W / 2, y + 18, sl, fsub, ss, (30, 22, 18), 1.3, "c")
+    return Image.alpha_composite(img, ov).convert("RGB")
+
+
+def s_f_text(s, base, i, n):
+    img = Image.new("RGB", (W, H), FILM["bg"]).convert("RGBA")
+    strip = film_strip(130)
+    img.alpha_composite(strip, (W - strip.size[0] - 70, 60))
+    img = img.convert("RGB")
+    d = film_frame(img, i, n)
+    rich_draw(d, s["text"], W / 2, H / 2 + 30, W - 220, 820, s.get("size", 46), 30)
+    return img
+
+
+RENDER = {"f_cover": s_f_cover, "f_text": s_f_text, "m_cover": s_m_cover, "m_point": s_m_point, "m_final": s_m_final, "still": s_still, "cover": s_cover, "hook": s_hook, "content": s_content, "text": s_text,
           "list": s_list, "quote": s_quote, "final": s_final}
 
 

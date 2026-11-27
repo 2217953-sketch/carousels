@@ -37,6 +37,7 @@ jobs:
           curl -sSfL "$base/lora/Lora%5Bwght%5D.ttf" -o fonts/Lora.ttf
           curl -sSfL "$base/lora/Lora-Italic%5Bwght%5D.ttf" -o fonts/Lora-Italic.ttf
           curl -sSfL "$base/montserrat/Montserrat%5Bwght%5D.ttf" -o fonts/Montserrat.ttf
+          curl -sSfL "$base/montserrat/Montserrat-Italic%5Bwght%5D.ttf" -o fonts/Montserrat-Italic.ttf
           curl -sSfL "$base/ebgaramond/EBGaramond%5Bwght%5D.ttf" -o fonts/EBGaramond.ttf
           curl -sSfL "$base/ebgaramond/EBGaramond-Italic%5Bwght%5D.ttf" -o fonts/EBGaramond-Italic.ttf
           curl -sSfL "$base/opensans/OpenSans%5Bwdth,wght%5D.ttf" -o fonts/OpenSans.ttf
