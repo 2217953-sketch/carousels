@@ -316,14 +316,14 @@ def s_final(s, base, i, n):
     base_rgba.alpha_composite(st, (sx, y))
     img = base_rgba.convert("RGB")
     d = ImageDraw.Draw(img)
-    y += st.size[1] + 70
+    y += st.size[1] + 40
     # висновок в овалі
     if s.get("text"):
         f, lines, sz = fit(d, s["text"], BRAND["italic"], 640, 280, 44, 30, 500, 1.3)
         h = len(lines) * sz * 1.3
-        oval(d, [W / 2 - 420, y, W / 2 + 420, y + h + 160], 11)
-        block(d, W / 2, y + 80, lines, f, sz, BRAND["ink"], 1.3, "c")
-        y += h + 160 + 60
+        oval(d, [W / 2 - 420, y, W / 2 + 420, y + h + 130], 11)
+        block(d, W / 2, y + 65, lines, f, sz, BRAND["ink"], 1.3, "c")
+        y += h + 130 + 50
     # кодове слово для чат-бота
     if s.get("keyword"):
         cta = s.get("cta", "Напишіть у коментарях слово")
