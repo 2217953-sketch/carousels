@@ -7,6 +7,7 @@ on:
       - "posts/**"
       - "photos/**"
       - "make_carousel.py"
+      - "assets/**"
   workflow_dispatch:
 
 permissions:
@@ -36,6 +37,8 @@ jobs:
           curl -sSfL "$base/lora/Lora%5Bwght%5D.ttf" -o fonts/Lora.ttf
           curl -sSfL "$base/lora/Lora-Italic%5Bwght%5D.ttf" -o fonts/Lora-Italic.ttf
           curl -sSfL "$base/montserrat/Montserrat%5Bwght%5D.ttf" -o fonts/Montserrat.ttf
+          curl -sSfL "$base/ebgaramond/EBGaramond%5Bwght%5D.ttf" -o fonts/EBGaramond.ttf
+          curl -sSfL "$base/ebgaramond/EBGaramond-Italic%5Bwght%5D.ttf" -o fonts/EBGaramond-Italic.ttf
 
       - name: Render slides
         env:
