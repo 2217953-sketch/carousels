@@ -1,0 +1,62 @@
+name: Build carousels
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "posts/**"
+      - "photos/**"
+      - "make_carousel.py"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-carousels
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Pillow
+        run: pip install pillow
+
+      - name: Download fonts
+        run: |
+          mkdir -p fonts
+          base=https://github.com/google/fonts/raw/main/ofl
+          curl -sSfL "$base/lora/Lora%5Bwght%5D.ttf" -o fonts/Lora.ttf
+          curl -sSfL "$base/lora/Lora-Italic%5Bwght%5D.ttf" -o fonts/Lora-Italic.ttf
+          curl -sSfL "$base/montserrat/Montserrat%5Bwght%5D.ttf" -o fonts/Montserrat.ttf
+
+      - name: Render slides
+        env:
+          CAROUSEL_BASE: ${{ github.workspace }}
+          CAROUSEL_FONTS: fonts
+        run: |
+          shopt -s nullglob
+          for f in posts/*.json; do
+            python make_carousel.py "$f" || echo "FAILED: $f" >> failed.txt
+          done
+          if [ -f failed.txt ]; then cat failed.txt; fi
+
+      - name: Commit rendered slides
+        run: |
+          git config user.name "carousel-bot"
+          git config user.email "carousel-bot@users.noreply.github.com"
+          git add out/ || true
+          if git diff --cached --quiet; then
+            echo "Nothing new to commit"
+          else
+            git commit -m "Render carousels"
+            git push
+          fi
+          if [ -f failed.txt ]; then exit 1; fi
