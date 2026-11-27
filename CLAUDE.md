@@ -6,6 +6,11 @@
 3. Після рендеру Claude переглядає слайди і створює пост у Buffer (організація «My organization», канал Instagram `larisa_rybyk`, id `6b093a8d8541f09ecbbe7a28`).
    Assets: `https://raw.githubusercontent.com/2217953-sketch/carousels/<SHA коміту з рендером>/out/<slug>/NN.jpg` (саме SHA, а не main: raw-кеш GitHub інакше може віддати стару версію), `metadata.instagram = {type: post, shouldShareToFeed: true}`, `schedulingType: automatic`, `mode: customScheduled`.
 
+Канали Buffer (організація «My organization», ліміт тарифу: 3 канали, 10 запланованих постів на канал):
+- Instagram larisa_rybyk — 6b093a8d8541f09ecbbe7a28 (каруселі, рилси)
+- TikTok larysa.rybyk — 6b099a608541f09ecbc27b46 (рилси як відео; каруселі — як фото-пост, якщо Лариса погодиться)
+- YouTube «Лариса Рибик» — 6b099a8c8541f09ecbc27c7f (лише відео: рилси як Shorts, metadata.youtube {type: short, title, categoryId: "22"})
+
 Розклад: щодня о **10:00 за Києвом** (часовий пояс Buffer — Europe/Paris, тобто 09:00 за Парижем). Не ставити два пости на один день. Перед плануванням перевіряти `list_posts`. На безкоштовному тарифі Buffer у черзі не більше 10 постів.
 
 Аудиторія: широке коло людей, яким НЕ цікаві дослідження. Ніяких слайдів про методологію, вибірку, цифри, «дослідники з'ясували». Пишемо простою людською мовою про досвід і практичну користь; посилання на джерело лише дрібним шрифтом на останньому слайді. У підписі теж без наукового тону.
