@@ -95,6 +95,13 @@ def clean(t):
     return "".join(ch for ch in t if ord(ch) < 0x2190 or 0x2190 <= ord(ch) <= 0x2BFF and False or ord(ch) in (0x2014, 0x2013, 0x2026, 0x00AB, 0x00BB, 0x2019, 0x02BC)).strip() if any(ord(c) > 0x2BFF for c in t) else t
 
 
+def _arrow_font(f):
+    for p in (os.path.join(FONTS, "Montserrat.ttf"), "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"):
+        if os.path.exists(p):
+            return ImageFont.truetype(p, f.size)
+    return f
+
+
 def put(d, xy, t, f, fill, tracking=0, anchor="l"):
     t = clean(t)
     x, y = xy
@@ -103,12 +110,15 @@ def put(d, xy, t, f, fill, tracking=0, anchor="l"):
         x -= width / 2
     elif anchor == "r":
         x -= width
-    if not tracking:
+    if not tracking and "→" not in t:
         d.text((x, y), t, font=f, fill=fill)
         return
     for ch in t:
-        d.text((x, y), ch, font=f, fill=fill)
-        x += d.textlength(ch, font=f) + tracking
+        ff = f
+        if ch == "→":
+            ff = _arrow_font(f)
+        d.text((x, y), ch, font=ff, fill=fill)
+        x += d.textlength(ch, font=ff) + tracking
 
 
 def fit(d, text, path, max_w, max_h, start, minimum, weight=None, lh=1.3, tracking=0):
@@ -436,10 +446,10 @@ def s_m_final(s, base, i, n):
     img = Image.new("RGB", (W, H), MIN["cream"])
     d = m_frame(img, i, n, footer=False, header=False)
     f, lines, sz = fit(d, s["text"], MIN["serif"], W - 260, 650, 50, 34, 450, 1.32)
-    y = block(d, W / 2, 170, lines, f, sz, MIN["tan"], 1.32, "c") + 80
+    y = block(d, W / 2, 230, lines, f, sz, MIN["tan"], 1.32, "c") + 140
     if s.get("question"):
-        fq, ql, qs = fit(d, s["question"], MIN["sans"], W - 300, 220, 36, 28, 500, 1.35)
-        y = block(d, W / 2, max(y, 860), ql, fq, qs, MIN["tan"], 1.35, "c") + 40
+        fq, ql, qs = fit(d, s["question"], MIN["sans"], W - 300, 220, 40, 28, 500, 1.35)
+        y = block(d, W / 2, y, ql, fq, qs, MIN["tan"], 1.35, "c") + 70
     if s.get("keyword"):
         cta = s.get("cta", "Напишіть у коментарях слово")
         y = block(d, W / 2, y, [cta], font(MIN["sans"], 32, 500), 32, MIN["tan"], 1.3, "c") + 10
