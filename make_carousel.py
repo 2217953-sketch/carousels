@@ -434,14 +434,20 @@ def s_m_cover(s, base, i, n):
 def s_m_point(s, base, i, n):
     img = Image.new("RGB", (W, H), MIN["pale"])
     d = m_frame(img, i, n)
-    y = 300
-    put(d, (W / 2, y), s.get("num", f"#{i - 1}"), font(MIN["serif"], 84, 500), MIN["tan"], anchor="c")
-    y += 160
-    fh, hl, hs = fit(d, s["heading"], MIN["sans"], W - 260, 330, 52, 36, 750, 1.2)
-    y = block(d, W / 2, y, hl, fh, hs, MIN["tan"], 1.2, "c") + 60
+    fn = font(MIN["serif"], 92, 500)
+    fh, hl, hs = fit(d, s["heading"], MIN["sans"], W - 240, 360, 56, 38, 750, 1.2)
+    hb = len(hl) * hs * 1.2
+    fb, bl, bs = (None, [], 0)
     if s.get("body"):
-        fb, bl, bs = fit(d, s["body"], MIN["sans"], W - 300, H - y - 220, 46, 32, 400, 1.35)
-        block(d, W / 2, y, bl, fb, bs, MIN["tan"], 1.35, "c")
+        fb, bl, bs = fit(d, s["body"], MIN["sans"], W - 280, 520, 48, 32, 400, 1.38)
+    bb = len(bl) * bs * 1.38
+    total = 110 + 50 + hb + (60 + bb if bl else 0)
+    y = max(170, (H - total) / 2 - 30)
+    put(d, (W / 2, y), s.get("num", f"#{i - 1}"), fn, MIN["tan"], anchor="c")
+    y += 160
+    y = block(d, W / 2, y, hl, fh, hs, MIN["tan"], 1.2, "c") + 60
+    if bl:
+        block(d, W / 2, y, bl, fb, bs, MIN["tan"], 1.38, "c")
     return img
 
 
