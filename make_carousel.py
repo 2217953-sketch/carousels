@@ -53,7 +53,16 @@ def font(path, size, weight=None):
     f = ImageFont.truetype(path, size)
     if weight:
         try:
-            f.set_variation_by_axes([weight])
+            axes = f.get_variation_axes()
+            vals = []
+            for a in axes:
+                nm = a.get("name", b"")
+                nm = nm.decode() if isinstance(nm, bytes) else str(nm)
+                if "eight" in nm or nm.lower().startswith("wght"):
+                    vals.append(max(a["minimum"], min(a["maximum"], weight)))
+                else:
+                    vals.append(a.get("default", a["maximum"]))
+            f.set_variation_by_axes(vals)
         except Exception:
             pass
     return f
@@ -366,7 +375,88 @@ def s_still(s, base, i, n):
     return img
 
 
-RENDER = {"still": s_still, "cover": s_cover, "hook": s_hook, "content": s_content, "text": s_text,
+# ─────────── МІНІМАЛІСТИЧНИЙ СТИЛЬ (шаблон «7 бар'єрів») ───────────
+MIN = {
+    "cream": (255, 248, 240), "pale": (241, 244, 247), "tan": (196, 148, 116),
+    "sans": _pick("OpenSans.ttf", "Montserrat.ttf"),
+    "serif": _pick("EBGaramond.ttf", "Lora.ttf"),
+    "serif_it": _pick("Lora-Italic.ttf"),
+    "site": "https://larysarybyk.com.ua",
+    "name": "Лариса Рибик",
+    "role": "Голова Міжнародної асоціації психологів по роботі з горем та тяжкою втратою",
+}
+
+
+def m_frame(img, i, n, footer=True, header=True):
+    d = ImageDraw.Draw(img)
+    fs = font(MIN["sans"], 24, 400)
+    if header:
+        put(d, (60, 50), BRAND["handle"], fs, MIN["tan"])
+        put(d, (W - 60, 50), MIN["site"], fs, MIN["tan"], anchor="r")
+        d.line([(W - 60 - tw(d, MIN["site"], fs), 80), (W - 60, 80)], fill=MIN["tan"], width=1)
+    if footer:
+        ap = BASE / "assets" / "avatar.jpg"
+        if ap.exists():
+            av = Image.open(ap).convert("RGB").resize((76, 76), Image.LANCZOS)
+            mask = Image.new("L", (76, 76), 0)
+            ImageDraw.Draw(mask).ellipse([0, 0, 75, 75], fill=255)
+            img.paste(av, (50, H - 120), mask)
+        put(d, (140, H - 116), MIN["name"], font(MIN["sans"], 26, 500), MIN["tan"])
+        fr, rl, rs = fit(d, MIN["role"], MIN["sans"], 420, 50, 15, 13, 400, 1.25)
+        block(d, 140, H - 82, rl, fr, rs, MIN["tan"], 1.25)
+        if i < n:
+            put(d, (W - 60, H - 100), "Swipe →", font(MIN["sans"], 26, 400), MIN["tan"], anchor="r")
+    return d
+
+
+def s_m_cover(s, base, i, n):
+    img = Image.new("RGB", (W, H), MIN["cream"])
+    d = m_frame(img, i, n)
+    f, lines, sz = fit(d, s["title"], MIN["serif_it"], W - 220, 900, 92, 50, 600, 1.32)
+    h = len(lines) * sz * 1.32
+    block(d, W / 2, (H - h) / 2 - 40, lines, f, sz, MIN["tan"], 1.32, "c")
+    return img
+
+
+def s_m_point(s, base, i, n):
+    img = Image.new("RGB", (W, H), MIN["pale"])
+    d = m_frame(img, i, n)
+    y = 300
+    put(d, (W / 2, y), s.get("num", f"#{i - 1}"), font(MIN["serif"], 84, 500), MIN["tan"], anchor="c")
+    y += 160
+    fh, hl, hs = fit(d, s["heading"], MIN["sans"], W - 260, 330, 52, 36, 750, 1.2)
+    y = block(d, W / 2, y, hl, fh, hs, MIN["tan"], 1.2, "c") + 60
+    if s.get("body"):
+        fb, bl, bs = fit(d, s["body"], MIN["sans"], W - 300, H - y - 220, 46, 32, 400, 1.35)
+        block(d, W / 2, y, bl, fb, bs, MIN["tan"], 1.35, "c")
+    return img
+
+
+def s_m_final(s, base, i, n):
+    img = Image.new("RGB", (W, H), MIN["cream"])
+    d = m_frame(img, i, n, footer=False, header=False)
+    f, lines, sz = fit(d, s["text"], MIN["serif"], W - 260, 650, 50, 34, 450, 1.32)
+    y = block(d, W / 2, 170, lines, f, sz, MIN["tan"], 1.32, "c") + 80
+    if s.get("question"):
+        fq, ql, qs = fit(d, s["question"], MIN["sans"], W - 300, 220, 36, 28, 500, 1.35)
+        y = block(d, W / 2, max(y, 860), ql, fq, qs, MIN["tan"], 1.35, "c") + 40
+    if s.get("keyword"):
+        cta = s.get("cta", "Напишіть у коментарях слово")
+        y = block(d, W / 2, y, [cta], font(MIN["sans"], 32, 500), 32, MIN["tan"], 1.3, "c") + 10
+        fk = font(MIN["sans"], 54, 750)
+        kw = s["keyword"] if s.get("keep_case") else s["keyword"].upper()
+        kwid = tw(d, kw, fk, 3)
+        d.rounded_rectangle([W / 2 - kwid / 2 - 40, y - 8, W / 2 + kwid / 2 + 40, y + 82], 45, fill=MIN["tan"])
+        put(d, (W / 2, y + 2), kw, fk, (255, 255, 255), 3, "c")
+        y += 115
+        if s.get("cta_after"):
+            fa, al, as_ = fit(d, s["cta_after"], MIN["sans"], W - 260, 130, 30, 24, 400, 1.3)
+            block(d, W / 2, y, al, fa, as_, MIN["tan"], 1.3, "c")
+    put(d, (W / 2, H - 80), BRAND["handle"], font(MIN["sans"], 26, 400), MIN["tan"], anchor="c")
+    return img
+
+
+RENDER = {"m_cover": s_m_cover, "m_point": s_m_point, "m_final": s_m_final, "still": s_still, "cover": s_cover, "hook": s_hook, "content": s_content, "text": s_text,
           "list": s_list, "quote": s_quote, "final": s_final}
 
 
