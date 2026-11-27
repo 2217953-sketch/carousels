@@ -4,7 +4,7 @@
 1. Лариса надсилає статтю. Claude пише `posts/<YYYY-MM-DD>-<slug>.json`: 6–10 слайдів, мова українська.
 2. Push у `main` запускає GitHub Actions, який рендерить `out/<slug>/NN.jpg` (1080×1350) і комітить їх.
 3. Після рендеру Claude переглядає слайди і створює пост у Buffer (організація «My organization», канал Instagram `larisa_rybyk`, id `6b093a8d8541f09ecbbe7a28`).
-   Assets: `https://raw.githubusercontent.com/2217953-sketch/carousels/main/out/<slug>/NN.jpg`, `metadata.instagram = {type: post, shouldShareToFeed: true}`, `schedulingType: automatic`, `mode: customScheduled`.
+   Assets: `https://raw.githubusercontent.com/2217953-sketch/carousels/<SHA коміту з рендером>/out/<slug>/NN.jpg` (саме SHA, а не main: raw-кеш GitHub інакше може віддати стару версію), `metadata.instagram = {type: post, shouldShareToFeed: true}`, `schedulingType: automatic`, `mode: customScheduled`.
 
 Розклад: щодня о **10:00 за Києвом** (часовий пояс Buffer — Europe/Paris, тобто 09:00 за Парижем). Не ставити два пости на один день. Перед плануванням перевіряти `list_posts`. На безкоштовному тарифі Buffer у черзі не більше 10 постів.
 
