@@ -339,8 +339,10 @@ def s_final(s, base, i, n):
             fa, al, as_ = fit(d, s["cta_after"], BRAND["body"], W - 2 * M, 140, 38, 28, 500, 1.3)
             y = block(d, W / 2, y, al, fa, as_, BRAND["ink"], 1.3, "c") + 10
     if s.get("source"):
-        fsrc, srl, srs = fit(d, s["source"], BRAND["body"], W - 2 * M, 150, 24, 18, 500, 1.3, tracking=1)
-        block(d, W / 2, max(y + 20, H - 140 - len(srl) * srs * 1.3), srl, fsrc, srs, BRAND["ink"], 1.3, "c", tracking=1)
+        room = max(60, H - 135 - (y + 15))
+        fsrc, srl, srs = fit(d, s["source"], BRAND["body"], W - 2 * M + 40, min(room, 150), 24, 16, 500, 1.3)
+        src_h = len(srl) * srs * 1.3
+        block(d, W / 2, H - 135 - src_h, srl, fsrc, srs, BRAND["ink"], 1.3, "c")
     put(d, (W / 2, H - 80), BRAND["handle"], font(BRAND["body"], 28, 500), BRAND["ink"], 3, "c")
     return img
 
