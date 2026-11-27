@@ -357,6 +357,9 @@ def s_final(s, base, i, n):
         if s.get("cta_after"):
             fa, al, as_ = fit(d, s["cta_after"], BRAND["body"], W - 2 * M, 140, 38, 28, 500, 1.3)
             y = block(d, W / 2, y, al, fa, as_, BRAND["ink"], 1.3, "c") + 10
+    if s.get("cta") and not s.get("keyword"):
+        fc, cl, cs = fit(d, s["cta"], BRAND["head"], W - 2 * M, 200, 46, 32, 650, 1.3)
+        y = block(d, W / 2, y + 10, cl, fc, cs, BRAND["ink"], 1.3, "c") + 20
     if s.get("source"):
         room = max(60, H - 135 - (y + 15))
         fsrc, srl, srs = fit(d, s["source"], BRAND["body"], W - 2 * M + 40, min(room, 150), 24, 16, 500, 1.3)
